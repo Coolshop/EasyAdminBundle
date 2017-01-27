@@ -1,0 +1,12 @@
+{% if is_header %}
+<th data-property-name="batchAll" class="batch-all">
+	<span>
+		<input type="checkbox" name="batch_all">
+		&nbsp;
+	</span>
+</th>
+{% else %}
+<td data-label="batch" class="batch">
+	<input type="checkbox" name="batch[{{item.id}}]">
+</td>
+{% endif %}

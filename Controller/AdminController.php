@@ -162,12 +162,13 @@ class AdminController extends Controller
 
         $fields = $this->entity['list']['fields'];
         $paginator = $this->findAll($this->entity['class'], $this->request->query->get('page', 1), $this->config['list']['max_results'], $this->request->query->get('sortField'), $this->request->query->get('sortDirection'), $this->entity['list']['dql_filter']);
-
+        $batchActions = $this->entity['list']['batch_actions'];
         $this->dispatch(EasyAdminEvents::POST_LIST, array('paginator' => $paginator));
 
         return $this->render($this->entity['templates']['list'], array(
             'paginator' => $paginator,
             'fields' => $fields,
+            'batch_actions' => $batchActions,
             'delete_form_template' => $this->createDeleteForm($this->entity['name'], '__id__')->createView(),
         ));
     }

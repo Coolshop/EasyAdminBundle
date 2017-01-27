@@ -25,6 +25,7 @@ class NormalizerConfigPass implements ConfigPassInterface
         'list' => array(
             'dql_filter' => null,
             'fields' => array(),
+            'batch_actions' => null,
         ),
         'search' => array(
             'dql_filter' => null,

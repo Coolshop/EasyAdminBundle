@@ -55,6 +55,7 @@ class EasyAdminTwigExtension extends \Twig_Extension
             new \Twig_SimpleFunction('easyadmin_get_action_for_*_view', array($this, 'getActionConfiguration')),
             new \Twig_SimpleFunction('easyadmin_get_actions_for_*_item', array($this, 'getActionsForItem')),
             new \Twig_SimpleFunction('easyadmin_logout_path', array($this, 'getLogoutPath')),
+            new \Twig_SimpleFunction('easyadmin_get_batch_checkbox_for_*_item', array($this, 'getBatchCheckboxForItem'), array('is_safe' => array('html'), 'needs_environment' => true)),
         );
     }
 
@@ -317,6 +318,29 @@ class EasyAdminTwigExtension extends \Twig_Extension
         return array_filter($viewActions, function ($action) use ($excludedActions, $disabledActions) {
             return !in_array($action['name'], $excludedActions) && !in_array($action['name'], $disabledActions);
         });
+    }
+
+    /**
+     * Returns the rendered template of checkbox for batch actions.
+     * 
+     * @param  string $entityName
+     * @return string
+     */
+    public function getBatchCheckboxForItem(\Twig_Environment $twig, $view, $entityName, $item, $isHeader = false)
+    {
+        $this->twig = $twig;
+
+        $entityConfiguration = $this->configManager->getEntityConfig($entityName);
+        $templateParameters = array(
+            'backend_config' => $this->getBackendConfiguration(),
+            'entity_config' => $entityConfiguration,
+            'item' => $item,
+            'view' => $view,
+            'is_header' => $isHeader,
+        );
+        dump($templateParameters);
+
+        return $this->twig->render($entityConfiguration['templates']['batch_checkbox'], $templateParameters);
     }
 
     /*

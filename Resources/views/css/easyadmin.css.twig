@@ -943,6 +943,21 @@ body.list .global-actions .input-group-btn a.btn {
     margin-left: 10px;
 }
 
+{# Batch checkbox
+   ------------------------------------------------------------------------- #}
+body.list .table .batch-all {
+    margin: 0;    
+    position: relative;
+}
+
+body.list .table .batch-all input[type="checkbox"],
+body.list .table .batch input[type="checkbox"] {
+    margin: 0;
+    position: absolute;
+    top: 15px;
+    left: 10px;
+}
+
 {# Responsive tables
    ------------------------------------------------------------------------- #}
 body.list .table-responsive,
@@ -986,6 +1001,16 @@ table td:after {
     content: "";
     display: block;
 }
+
+table td.batch-all:before,
+table td.batch:before {
+    visibility: hidden
+}
+table td.batch-all,
+table td.batch {
+    position: relative;
+}
+
 /* needed because the responsive tables require contents aligned to the right */
 body.list table td,
 body.list table .text-center,

@@ -61,6 +61,7 @@ class TemplateConfigPass implements ConfigPassInterface
         'label_inaccessible' => '@EasyAdmin/default/label_inaccessible.html.twig',
         'label_null' => '@EasyAdmin/default/label_null.html.twig',
         'label_undefined' => '@EasyAdmin/default/label_undefined.html.twig',
+        'batch_checkbox' => '@EasyAdmin/default/batch_checkbox.html.twig',
     );
 
     public function __construct($templatesDir)
