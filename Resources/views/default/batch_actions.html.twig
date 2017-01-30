@@ -2,7 +2,7 @@
     <div class="batch-actions">
         <div class="dropdown">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-title="{{ 'Actions' | trans(_trans_parameters, _translation_domain) }}">
-                <span>{{ 'Actions' | trans(_trans_parameters, _translation_domain) }}</span>
+                <span>{{ 'actions' | trans(_trans_parameters, _translation_domain) }}</span>
                 <i class="fa fa-caret-down"></i>
             </button>
             <ul class="dropdown-menu">
@@ -17,7 +17,37 @@
             </ul>
         </div>
 
-        <a href="#" class="btn btn-primary btn-batch-submit">{{ 'Confirm batch action' | trans(_trans_parameters, _translation_domain) }}</a>
+        <a href="#" class="btn btn-primary btn-batch-submit">{{ 'action.confirm' | trans(_trans_parameters, _translation_domain) }}</a>
+
+
+        {#
+            Maybe a batch_form?
+            form(delete_form, {
+                action: delete_form.vars.action ~ '&referer=' ~ referer,
+                method: 'DELETE',
+                attr: { id: 'delete-form', style: 'display: none' }
+            })
+        #}
+
+        <div id="modal-batch" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <h4>{{ 'batch_modal.title'|trans(_trans_parameters, _translation_domain) }}</h4>
+                        <p>{{ 'batch_modal.content'|trans(_trans_parameters, _translation_domain) }}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" data-dismiss="modal" class="btn">
+                            {{ 'action.cancel'|trans(_trans_parameters, _translation_domain) }}
+                        </button>
+
+                        <button type="button" data-dismiss="modal" class="btn btn-primary" id="modal-batch-button" formtarget="">
+                            {{ 'action.confirm'|trans(_trans_parameters, _translation_domain) }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     
@@ -28,7 +58,10 @@
         var $dropdownToggle = this.find('.dropdown-toggle');
         var $btn = this.find('.btn-batch-submit');
         var $actions = this.find('.dropdown-menu a');
-        
+        var $modalBatch = $('#modal-batch');
+        var $modalBatchBtn = $('#modal-batch-button');
+        var $batchForm;
+
         $dropdownToggle.attr('disabled', 'disabled');
         $btn.attr('disabled', 'disabled');
 
@@ -37,17 +70,28 @@
             $actions.off('click');
             if ($batchAll.add($batchCheckboxList).is(':checked')) {
                 $dropdownToggle.removeAttr('disabled');
-                $actions.on('click', function(clickEvent) {
-                    clickEvent.preventDefault();
-                    var $target = $(clickEvent.currentTarget);
+                $actions.on('click', function(actionClickEvent) {
+                    actionClickEvent.preventDefault();
+                    var $target = $(actionClickEvent.currentTarget);
                     $dropdownToggle.find('span').text($target.text());
                     $btn.removeAttr('disabled');
 
+                    $btn.off('click').on('click', function(submitEvent) {
+                        submitEvent.preventDefault();
+                        $modalBatch.modal({ backdrop: true, keyboard: true })
+                            .off('click', '#modal-batch-button')
+                            .on('click', '#modal-batch-button', function () {
+                                // to understand what should be done
+                                // $batchForm.attr('action', $batchForm.attr('action').replace('__id__', id));
+                                // $batchForm.trigger('submit');
+                            });
+                    });
                 });
+
             } else {
                 $dropdownToggle.find('span').text($dropdownToggle.data('title'));
                 $dropdownToggle.attr('disabled', 'disabled');
-                $btn.attr('disabled', 'disabled');
+                $btn.attr('disabled', 'disabled').off('click');
             }
         });
 

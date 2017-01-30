@@ -671,6 +671,29 @@ class AdminController extends Controller
     }
 
     /**
+     * Creates the form used to execute batch actions. It must be a form to be compliant with 
+     * the code style of delete action.
+     *
+     * @param string     $entityName
+     * @param int|string $entityIds   When reusing the delete form for multiple entities, a pattern string is passed instead of an integer
+     *
+     * @return Form|FormInterface
+     */
+    protected function createBatchForm($entityName, $entityIds)
+    {
+        /** @var FormBuilder $formBuilder */
+        $formBuilder = $this->get('form.factory')->createNamedBuilder('batch_form')
+            ->setAction($this->generateUrl('easyadmin', array('action' => 'delete', 'entity' => $entityName, 'ids' => $entityId)))
+            ->setMethod('POST')
+        ;
+        $formBuilder->add('submit', LegacyFormHelper::getType('submit'), array('label' => 'batch_modal.action', 'translation_domain' => 'EasyAdminBundle'));
+        // needed to avoid submitting empty forms (see issue #1409)
+        $formBuilder->add('_easyadmin_batch_flag', LegacyFormHelper::getType('hidden'), array('data' => '1'));
+
+        return $formBuilder->getForm();
+    }
+
+    /**
      * Utility method that checks if the given action is allowed for
      * the current entity.
      *
