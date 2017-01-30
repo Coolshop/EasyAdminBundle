@@ -55,6 +55,7 @@ class EasyAdminTwigExtension extends \Twig_Extension
             new \Twig_SimpleFunction('easyadmin_get_action_for_*_view', array($this, 'getActionConfiguration')),
             new \Twig_SimpleFunction('easyadmin_get_actions_for_*_item', array($this, 'getActionsForItem')),
             new \Twig_SimpleFunction('easyadmin_logout_path', array($this, 'getLogoutPath')),
+            new \Twig_SimpleFunction('easyadmin_get_batch_actions_for_item', array($this, 'getBatchActionsForItem')),
             new \Twig_SimpleFunction('easyadmin_get_batch_checkbox_for_*_item', array($this, 'getBatchCheckboxForItem'), array('is_safe' => array('html'), 'needs_environment' => true)),
         );
     }
@@ -321,6 +322,38 @@ class EasyAdminTwigExtension extends \Twig_Extension
     }
 
     /**
+     * Returns the actions configured for each item displayed in the batch section.
+     * This method is needed because some actions are displayed globally for the
+     * entire view.
+     *
+     * @param string $view
+     * @param string $entityName
+     *
+     * @return array
+     */
+    public function getBatchActionsForItem($entityName)
+    {
+        try {
+            $entityConfig = $this->configManager->getEntityConfig($entityName);
+        } catch (\Exception $e) {
+            return array();
+        }
+
+        $viewActions = $entityConfig['list']['actions'];
+        $batchActions = $entityConfig['list']['batch_actions'];
+        
+        if (is_null($batchActions)) {
+            return;
+        }
+
+        $excludedActions = array('new', 'search', 'edit');
+
+        return array_filter($viewActions, function ($action) use ($excludedActions, $batchActions) {
+            return !in_array($action['name'], $excludedActions) && in_array($action['name'], $batchActions);
+        });
+    }
+
+    /**
      * Returns the rendered template of checkbox for batch actions.
      * 
      * @param  string $entityName
@@ -338,7 +371,6 @@ class EasyAdminTwigExtension extends \Twig_Extension
             'view' => $view,
             'is_header' => $isHeader,
         );
-        dump($templateParameters);
 
         return $this->twig->render($entityConfiguration['templates']['batch_checkbox'], $templateParameters);
     }

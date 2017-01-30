@@ -36,6 +36,8 @@
 
 {% block page_title %}{{ _content_title|striptags|raw }}{% endblock %}
 
+{% set _batch_actions = easyadmin_get_batch_actions_for_item(_entity_config.name) %}
+
 {% block content_header %}
     <div class="row">
         <div class="col-sm-5">
@@ -174,6 +176,16 @@
         </tbody>
     </table>
     </div>
+
+    {% block batch_actions %}
+        {{ include(_entity_config.templates.batch_actions, {
+            view: 'list',
+            _translation_domain: _entity_config.translation_domain,
+            _trans_parameters: _trans_parameters,
+            _entity_config: _entity_config,
+            _batch_actions: _batch_actions,
+        }, with_context = false) }}
+    {% endblock batch_actions %}
 
     {% block paginator %}
         {{ include(_entity_config.templates.paginator) }}

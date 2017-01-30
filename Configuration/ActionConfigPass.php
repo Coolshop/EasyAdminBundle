@@ -38,6 +38,7 @@ class ActionConfigPass implements ConfigPassInterface
     public function process(array $backendConfig)
     {
         $backendConfig = $this->processDisabledActions($backendConfig);
+        $backendConfig = $this->processBatchActions($backendConfig);
         $backendConfig = $this->normalizeActionsConfig($backendConfig);
         $backendConfig = $this->resolveActionInheritance($backendConfig);
         $backendConfig = $this->filterRemovedActions($backendConfig);
@@ -54,6 +55,21 @@ class ActionConfigPass implements ConfigPassInterface
             $disabledActions = array_unique(array_merge($actionsDisabledByBackend, $actionsDisabledByEntity));
 
             $backendConfig['entities'][$entityName]['disabled_actions'] = $disabledActions;
+        }
+
+        return $backendConfig;
+    }
+
+    private function processBatchActions(array $backendConfig)
+    {
+        $batchActionsByBackend = $backendConfig['list']['batch_actions'];
+        if ($batchActionsByBackend) {
+            foreach ($backendConfig['entities'] as $entityName => $entityConfig) {
+                $batchActionsByEntity = isset($entityConfig['list']['batch_actions']) ? $entityConfig['list']['batch_actions'] : array();
+                $batchActions = array_unique(array_merge($batchActionsByBackend, $batchActionsByEntity));
+
+                $backendConfig['entities'][$entityName]['list']['batch_actions'] = $batchActions;
+            }
         }
 
         return $backendConfig;

@@ -1,0 +1,63 @@
+{% if _batch_actions is not null %}
+    <div class="batch-actions">
+        <div class="dropdown">
+            <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-title="{{ 'Actions' | trans(_trans_parameters, _translation_domain) }}">
+                <span>{{ 'Actions' | trans(_trans_parameters, _translation_domain) }}</span>
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <ul class="dropdown-menu">
+                {% for action in _batch_actions %}
+                    <li><a href="#" class="{{ action.css_class|default('') }}" data-action="{{action.name}}">
+                        {%- if action.icon %}<i class="fa fa-{{ action.icon }}"></i> {% endif -%}
+                        {%- if action.label is defined and not action.label is empty -%}
+                            {{ action.label|trans(arguments = _trans_parameters, domain = _translation_domain) }}
+                        {%- endif -%}
+                    </a></li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <a href="#" class="btn btn-primary btn-batch-submit">{{ 'Confirm batch action' | trans(_trans_parameters, _translation_domain) }}</a>
+    </div>
+
+    
+    <script type="text/javascript">
+    $.fn.batchActions = function() {
+        var $batchAll = $('.batch-all input[type="checkbox"]');
+        var $batchCheckboxList = $('.batch input[type="checkbox"]');
+        var $dropdownToggle = this.find('.dropdown-toggle');
+        var $btn = this.find('.btn-batch-submit');
+        var $actions = this.find('.dropdown-menu a');
+        
+        $dropdownToggle.attr('disabled', 'disabled');
+        $btn.attr('disabled', 'disabled');
+
+        // Handle Dropdown UX
+        $batchAll.add($batchCheckboxList).on('change', function(evt) {
+            $actions.off('click');
+            if ($batchAll.add($batchCheckboxList).is(':checked')) {
+                $dropdownToggle.removeAttr('disabled');
+                $actions.on('click', function(clickEvent) {
+                    clickEvent.preventDefault();
+                    var $target = $(clickEvent.currentTarget);
+                    $dropdownToggle.find('span').text($target.text());
+                    $btn.removeAttr('disabled');
+
+                });
+            } else {
+                $dropdownToggle.find('span').text($dropdownToggle.data('title'));
+                $dropdownToggle.attr('disabled', 'disabled');
+                $btn.attr('disabled', 'disabled');
+            }
+        });
+
+        return this;
+    };
+
+    $(document).ready(function() {
+        $('.batch-actions').batchActions();
+    });
+    </script>
+{% endif %}
+
+
