@@ -388,9 +388,17 @@ class AdminController extends Controller
             
             $ids = $this->request->query->get('ids');
             if ('all' === $ids) {
-                // @TODO
-                // consider query filter from search
-                $entities = $this->em->getRepository($this->entity['class'])->findAll();
+                $paginator = $this->findBy(
+                    $this->entity['class'], 
+                    $this->request->query->get('query'), 
+                    $this->entity['search']['fields'], 
+                    $this->request->query->get('page', 1), 
+                    $this->config['list']['max_results'], 
+                    $this->request->query->get('sortField'), 
+                    $this->request->query->get('sortDirection'), 
+                    $this->entity['search']['dql_filter']);
+
+                $entities = $paginator->getCurrentPageResults();
             } else {
                 $entities = $this->em->getRepository($this->entity['class'])->findById(explode(',', $ids));
             }
