@@ -47,6 +47,10 @@ final class EasyAdminEvents
     const PRE_SHOW = 'easy_admin.pre_show';
     /** @Event("Symfony\Component\EventDispatcher\GenericEvent") */
     const POST_SHOW = 'easy_admin.post_show';
+    /** @Event("Symfony\Component\EventDispatcher\GenericEvent") */
+    const PRE_BATCH = 'easy_admin.pre_batch';
+    /** @Event("Symfony\Component\EventDispatcher\GenericEvent") */
+    const POST_BATCH = 'easy_admin.post_batch';
 
     // Events related to Doctrine entities
     /** @Event("Symfony\Component\EventDispatcher\GenericEvent") */

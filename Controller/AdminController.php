@@ -170,6 +170,7 @@ class AdminController extends Controller
             'fields' => $fields,
             'batch_actions' => $batchActions,
             'delete_form_template' => $this->createDeleteForm($this->entity['name'], '__id__')->createView(),
+            'batch_form_template' => $this->createBatchForm($this->entity['name'], '__id__', '__action__')->createView(),
         ));
     }
 
@@ -319,7 +320,10 @@ class AdminController extends Controller
     {
         $this->dispatch(EasyAdminEvents::PRE_DELETE);
 
-        if ('DELETE' !== $this->request->getMethod()) {
+        $easyadmin = $this->request->attributes->get('easyadmin');
+        
+        if ('DELETE' !== $this->request->getMethod() 
+            && 'delete' !== $easyadmin['batch']) {
             return $this->redirect($this->generateUrl('easyadmin', array('action' => 'list', 'entity' => $this->entity['name'])));
         }
 
@@ -327,8 +331,8 @@ class AdminController extends Controller
         $form = $this->createDeleteForm($this->entity['name'], $id);
         $form->handleRequest($this->request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $easyadmin = $this->request->attributes->get('easyadmin');
+        if (($form->isSubmitted() && $form->isValid()) 
+            || 'delete' === $easyadmin['batch']) {
             $entity = $easyadmin['item'];
 
             $this->dispatch(EasyAdminEvents::PRE_REMOVE, array('entity' => $entity));
@@ -355,6 +359,62 @@ class AdminController extends Controller
     }
 
     /**
+     * The method that is executed when the user performs a 'batch' action onto a list of entities.
+     * 
+     * @return RedirectResponse
+     */
+    protected function batchAction()
+    {
+        $this->dispatch(EasyAdminEvents::PRE_BATCH);
+
+        if ('POST' !== $this->request->getMethod()) {
+            return $this->redirect($this->generateUrl('easyadmin', array('action' => 'list', 'entity' => $this->entity['name'])));
+        }
+
+        $ids = $this->request->query->get('ids');
+        $batchAction = $action = $this->request->query->get('batch_action', null);
+        
+        // @TODO is allowed changed conditions
+        // 
+        // if (!$this->isActionAllowed($batchAction)) {
+        //     throw new ForbiddenActionException(array('action' => $batchAction, 'entity_name' => $this->entity['name']));
+        // }
+
+        $form = $this->createBatchForm($this->entity['name'], $ids, $batchAction);
+        $form->handleRequest($this->request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $easyadmin = $this->request->attributes->get('easyadmin');
+            
+            $ids = $this->request->query->get('ids');
+            if ('all' === $ids) {
+                // @TODO
+                // consider query filter from search
+                $entities = $this->em->getRepository($this->entity['class'])->findAll();
+            } else {
+                $entities = $this->em->getRepository($this->entity['class'])->findById(explode(',', $ids));
+            }
+
+            $this->executeDynamicMethod('preBatch<EntityName>Entity', array($entities));
+
+            foreach ($entities as $entity) {
+                $easyadmin['item'] = $entity;
+                $this->request->attributes->set('easyadmin', $easyadmin);
+                $this->executeDynamicMethod($batchAction.'<EntityName>Action');
+            }
+           
+        }
+
+        $refererUrl = $this->request->query->get('referer', '');
+
+        $this->dispatch(EasyAdminEvents::POST_BATCH);
+
+        return !empty($refererUrl)
+            ? $this->redirect(urldecode($refererUrl))
+            : $this->redirect($this->generateUrl('easyadmin', array('action' => 'list', 'entity' => $this->entity['name'])));
+    }
+
+    /**
      * The method that is executed when the user performs a query on an entity.
      *
      * @return Response
@@ -374,6 +434,7 @@ class AdminController extends Controller
         $searchableFields = $this->entity['search']['fields'];
         $paginator = $this->findBy($this->entity['class'], $this->request->query->get('query'), $searchableFields, $this->request->query->get('page', 1), $this->config['list']['max_results'], $this->request->query->get('sortField'), $this->request->query->get('sortDirection'), $this->entity['search']['dql_filter']);
         $fields = $this->entity['list']['fields'];
+        $batchActions = $this->entity['list']['batch_actions'];
 
         $this->dispatch(EasyAdminEvents::POST_SEARCH, array(
             'fields' => $fields,
@@ -382,8 +443,10 @@ class AdminController extends Controller
 
         return $this->render($this->entity['templates']['list'], array(
             'paginator' => $paginator,
+            'batch_actions' => $batchActions,
             'fields' => $fields,
             'delete_form_template' => $this->createDeleteForm($this->entity['name'], '__id__')->createView(),
+            'batch_form_template' => $this->createBatchForm($this->entity['name'], '__id__', '__action__')->createView(),
         ));
     }
 
@@ -457,6 +520,16 @@ class AdminController extends Controller
      * @param object $entity
      */
     protected function preRemoveEntity($entity)
+    {
+    }
+
+    /**
+     * Allows applications to modify the entity associated with the item being
+     * deleted before removing it.
+     *
+     * @param object $entity
+     */
+    protected function preBatchEntity($entity)
     {
     }
 
@@ -679,11 +752,11 @@ class AdminController extends Controller
      *
      * @return Form|FormInterface
      */
-    protected function createBatchForm($entityName, $entityIds)
+    protected function createBatchForm($entityName, $entityIds, $batchAction)
     {
         /** @var FormBuilder $formBuilder */
         $formBuilder = $this->get('form.factory')->createNamedBuilder('batch_form')
-            ->setAction($this->generateUrl('easyadmin', array('action' => 'delete', 'entity' => $entityName, 'ids' => $entityId)))
+            ->setAction($this->generateUrl('easyadmin', array('action' => 'batch', 'entity' => $entityName, 'ids' => $entityIds, 'batch_action' => $batchAction)))
             ->setMethod('POST')
         ;
         $formBuilder->add('submit', LegacyFormHelper::getType('submit'), array('label' => 'batch_modal.action', 'translation_domain' => 'EasyAdminBundle'));

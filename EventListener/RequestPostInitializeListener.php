@@ -66,6 +66,7 @@ class RequestPostInitializeListener
             'entity' => $entity = $event->getArgument('entity'),
             'view' => $this->request->query->get('action', 'list'),
             'item' => ($id = $this->request->query->get('id')) ? $this->findCurrentItem($entity, $id) : null,
+            'batch' => $this->request->query->get('batch_action', null),
         ));
     }
 
