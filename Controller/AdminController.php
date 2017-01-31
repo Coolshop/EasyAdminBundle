@@ -374,11 +374,9 @@ class AdminController extends Controller
         $ids = $this->request->query->get('ids');
         $batchAction = $action = $this->request->query->get('batch_action', null);
         
-        // @TODO is allowed changed conditions
-        // 
-        // if (!$this->isActionAllowed($batchAction)) {
-        //     throw new ForbiddenActionException(array('action' => $batchAction, 'entity_name' => $this->entity['name']));
-        // }
+        if (!$this->isActionAllowed($batchAction)) {
+            throw new ForbiddenActionException(array('action' => $batchAction, 'entity_name' => $this->entity['name']));
+        }
 
         $form = $this->createBatchForm($this->entity['name'], $ids, $batchAction);
         $form->handleRequest($this->request);
