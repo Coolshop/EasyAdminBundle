@@ -55,7 +55,6 @@ class EasyAdminTwigExtension extends \Twig_Extension
             new \Twig_SimpleFunction('easyadmin_get_action_for_*_view', array($this, 'getActionConfiguration')),
             new \Twig_SimpleFunction('easyadmin_get_actions_for_*_item', array($this, 'getActionsForItem')),
             new \Twig_SimpleFunction('easyadmin_logout_path', array($this, 'getLogoutPath')),
-            new \Twig_SimpleFunction('easyadmin_get_batch_actions_for_item', array($this, 'getBatchActionsForItem')),
             new \Twig_SimpleFunction('easyadmin_get_batch_checkbox_for_*_item', array($this, 'getBatchCheckboxForItem'), array('is_safe' => array('html'), 'needs_environment' => true)),
         );
     }
@@ -304,53 +303,25 @@ class EasyAdminTwigExtension extends \Twig_Extension
         } catch (\Exception $e) {
             return array();
         }
-
+        
+        if ('batch' === $view) {
+            $viewActions = $entityConfig['list']['batch_actions'];
+        } else {
+            $viewActions = $entityConfig[$view]['actions'];
+        }
         $disabledActions = $entityConfig['disabled_actions'];
-        $viewActions = $entityConfig[$view]['actions'];
 
         $actionsExcludedForItems = array(
             'list' => array('new', 'search'),
             'edit' => array(),
             'new' => array(),
             'show' => array(),
+            'batch' => array('new', 'search', 'edit', 'list'),
         );
         $excludedActions = $actionsExcludedForItems[$view];
 
         return array_filter($viewActions, function ($action) use ($excludedActions, $disabledActions) {
             return !in_array($action['name'], $excludedActions) && !in_array($action['name'], $disabledActions);
-        });
-    }
-
-    /**
-     * Returns the actions configured for each item displayed in the batch section.
-     * This method is needed because some actions are displayed globally for the
-     * entire view.
-     * Excluded by default actions in array('new', 'search', 'edit', 'list');
-     *
-     * @param string $view
-     * @param string $entityName
-     *
-     * @return array
-     */
-    public function getBatchActionsForItem($entityName)
-    {
-        try {
-            $entityConfig = $this->configManager->getEntityConfig($entityName);
-        } catch (\Exception $e) {
-            return array();
-        }
-
-        $viewActions = $entityConfig['list']['actions'];
-        $batchActions = $entityConfig['list']['batch_actions'];
-        
-        if (is_null($batchActions)) {
-            return;
-        }
-
-        $excludedActions = array('new', 'search', 'edit', 'list');
-
-        return array_filter($viewActions, function ($action) use ($excludedActions, $batchActions) {
-            return !in_array($action['name'], $excludedActions) && in_array($action['name'], $batchActions);
         });
     }
 

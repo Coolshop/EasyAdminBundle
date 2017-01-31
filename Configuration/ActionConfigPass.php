@@ -106,6 +106,16 @@ class ActionConfigPass implements ConfigPassInterface
             $actionsConfig = $this->doNormalizeDefaultActionsConfig($actionsConfig, $view);
 
             $backendConfig[$view]['actions'] = $actionsConfig;
+
+            // normalize batch actions also
+            if ('list' === $view) {
+                $actionsConfig = $backendConfig[$view]['batch_actions'];
+                $actionsConfig = $this->doNormalizeActionsConfig($actionsConfig, sprintf('the global "%s" view defined under "easy_admin" option', $view));
+                $actionsConfig = $this->doNormalizeDefaultActionsConfig($actionsConfig, $view);
+
+                $backendConfig[$view]['batch_actions'] = $actionsConfig;
+
+            }
         }
 
         // second, normalize actions defined for each entity
@@ -116,9 +126,19 @@ class ActionConfigPass implements ConfigPassInterface
                 $actionsConfig = $this->doNormalizeDefaultActionsConfig($actionsConfig, $view);
 
                 $backendConfig['entities'][$entityName][$view]['actions'] = $actionsConfig;
+
+                // normalize batch actions also
+                if ('list' === $view) {
+                    $actionsConfig = $entityConfig[$view]['batch_actions'];
+                    $actionsConfig = $this->doNormalizeActionsConfig($actionsConfig, sprintf('the "%s" view of the "%s" entity', $view, $entityName));
+                    $actionsConfig = $this->doNormalizeDefaultActionsConfig($actionsConfig, $view);
+
+                    $backendConfig['entities'][$entityName][$view]['batch_actions'] = $actionsConfig;
+                }
             }
         }
 
+        
         return $backendConfig;
     }
 
@@ -233,6 +253,22 @@ class ActionConfigPass implements ConfigPassInterface
                 });
 
                 $backendConfig['entities'][$entityName][$view]['actions'] = $filteredActions;
+
+                if ('list' === $view) {
+                    $actionsConfig = $entityConfig[$view]['batch_actions'];
+                    // if the name of the action starts with a dash ('-'), remove it
+                    $removedActions = array_filter($actionsConfig, function ($action) {
+                        return '-' === $action['name'][0];
+                    });
+
+                    $filteredActions = array_filter($actionsConfig, function ($action) use ($removedActions) {
+                        // e.g. '-search' action name removes both '-search' and 'search' (if exists)
+                        return !array_key_exists($action['name'], $removedActions)
+                            && !array_key_exists('-'.$action['name'], $removedActions);
+                    });
+
+                    $backendConfig['entities'][$entityName][$view]['batch_actions'] = $filteredActions;
+                }
             }
         }
 
@@ -258,6 +294,24 @@ class ActionConfigPass implements ConfigPassInterface
                     $actionConfig['css_class'] .= ' action-'.$actionName;
 
                     $backendConfig['entities'][$entityName][$view]['actions'][$actionName] = $actionConfig;
+                }
+                if ('list' === $view) {   
+                    foreach ($entityConfig[$view]['batch_actions'] as $actionName => $actionConfig) {
+                        // 'name' value is used as the class method name or the Symfony route name
+                        // check that its value complies with the PHP method name rules
+                        if (!$this->isValidMethodName($actionName)) {
+                            throw new \InvalidArgumentException(sprintf('The name of the "%s" action defined in the "%s" view of the "%s" entity contains invalid characters (allowed: letters, numbers, underscores; the first character cannot be a number).', $actionName, $view, $entityName));
+                        }
+
+                        if (null === $actionConfig['label']) {
+                            $actionConfig['label'] = $this->humanizeString($actionName);
+                        }
+
+                        // Add default classes ("action-{actionName}") to each action configuration
+                        $actionConfig['css_class'] .= ' action-'.$actionName;
+
+                        $backendConfig['entities'][$entityName][$view]['batch_actions'][$actionName] = $actionConfig;
+                    }
                 }
             }
         }

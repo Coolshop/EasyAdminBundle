@@ -36,7 +36,7 @@
 
 {% block page_title %}{{ _content_title|striptags|raw }}{% endblock %}
 
-{% set _batch_actions = easyadmin_get_batch_actions_for_item(_entity_config.name) %}
+{% set _batch_actions = easyadmin_get_actions_for_batch_item(_entity_config.name) %}
 
 {% block content_header %}
     <div class="row">
@@ -102,7 +102,7 @@
         <thead>
         {% block table_head %}
             <tr>
-                {% if batch_actions is not null %}
+                {% if _batch_actions is not empty %}
                     {{ easyadmin_get_batch_checkbox_for_list_item(_entity_config.name, null, true) }}
                 {% endif %}
                 {% for field, metadata in fields %}
@@ -138,7 +138,7 @@
                 {# the empty string concatenation is needed when the primary key is an object (e.g. an Uuid object) #}
                 {% set _item_id = '' ~ attribute(item, _entity_config.primary_key_field_name) %}
                 <tr data-id="{{ _item_id }}">
-                    {% if batch_actions is not null %}
+                    {% if _batch_actions is not empty %}
                         {{ easyadmin_get_batch_checkbox_for_list_item(_entity_config.name, item) }}
                     {% endif %}
                     {% for field, metadata in fields %}
