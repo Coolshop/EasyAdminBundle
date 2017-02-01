@@ -19,7 +19,16 @@
 
         <a href="#" class="btn btn-primary btn-batch-submit">{{ 'action.confirm' | trans(_trans_parameters, _translation_domain) }}</a>
 
-        {% set query = (_request_parameters.query is defined ? '&query=' ~ _request_parameters.query : '') %}
+        {% if _request_parameters.query is defined and _request_parameters.query is iterable %}
+            {% set query = '' %}
+            {% for key, queryItem in _request_parameters.query %}
+                {% set query = query ~ '&query[' ~ key ~ ']=' ~ (queryItem | url_encode) %}
+            {% endfor %}
+        {% elseif _request_parameters.query is defined %}
+            {% set query = '&query=' ~ _request_parameters.query %}
+        {% else %}
+            {% set query = '' %}
+        {% endif %}
 
         {{
             form(batch_form, {
