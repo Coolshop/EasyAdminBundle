@@ -63,13 +63,11 @@ class ActionConfigPass implements ConfigPassInterface
     private function processBatchActions(array $backendConfig)
     {
         $batchActionsByBackend = $backendConfig['list']['batch_actions'];
-        if ($batchActionsByBackend) {
-            foreach ($backendConfig['entities'] as $entityName => $entityConfig) {
-                $batchActionsByEntity = isset($entityConfig['list']['batch_actions']) ? $entityConfig['list']['batch_actions'] : array();
-                $batchActions = array_unique(array_merge($batchActionsByBackend, $batchActionsByEntity));
+        foreach ($backendConfig['entities'] as $entityName => $entityConfig) {
+            $batchActionsByEntity = isset($entityConfig['list']['batch_actions']) ? $entityConfig['list']['batch_actions'] : array();
+            $batchActions = array_unique(array_merge($batchActionsByBackend, $batchActionsByEntity));
 
-                $backendConfig['entities'][$entityName]['list']['batch_actions'] = $batchActions;
-            }
+            $backendConfig['entities'][$entityName]['list']['batch_actions'] = $batchActions;
         }
 
         return $backendConfig;
