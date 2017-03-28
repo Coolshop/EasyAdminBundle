@@ -73,13 +73,13 @@
         $dropdownToggle.attr('disabled', 'disabled');
         $btn.attr('disabled', 'disabled');
 
-        // Handle Dropdown UX
-        $batchAll.add($batchCheckboxList).on('change', function(evt) {
+        function handlerCheckboxChange(event) {
             $actions.off('click');
             if ($batchAll.add($batchCheckboxList).is(':checked')) {
                 $dropdownToggle.removeAttr('disabled');
                 $actions.on('click', function(actionClickEvent) {
                     actionClickEvent.preventDefault();
+                    actionClickEvent.stopImmediatePropagation();
                     var $target = $(actionClickEvent.currentTarget);
                     $dropdownToggle.find('span').text($target.text());
                     $btn.removeAttr('disabled');
@@ -110,7 +110,11 @@
                 $dropdownToggle.attr('disabled', 'disabled');
                 $btn.attr('disabled', 'disabled').off('click');
             }
-        });
+        }
+
+        // Handle Dropdown UX
+        $batchAll.add($batchCheckboxList).on('change', handlerCheckboxChange);
+        handlerCheckboxChange();
 
         return this;
     };
