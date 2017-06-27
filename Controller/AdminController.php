@@ -386,17 +386,12 @@ class AdminController extends Controller
             
             $ids = $this->request->query->get('ids');
             if ('all' === $ids) {
-                $paginator = $this->findBy(
-                    $this->entity['class'], 
-                    $this->request->query->get('query'), 
-                    $this->entity['search']['fields'], 
-                    $this->request->query->get('page', 1), 
-                    $this->config['list']['max_results'], 
-                    $this->request->query->get('sortField'), 
+                $qb = $this->createSearchQueryBuilder($this->entity['class'], $this->request->query->get('query'), 
+                    $this->entity['search']['fields'], $this->request->query->get('sortField'), 
                     $this->request->query->get('sortDirection'), 
                     $this->entity['search']['dql_filter']);
 
-                $entities = $paginator->getCurrentPageResults();
+                $entities = $qb->getQuery()->iterate();
             } else {
                 $entities = $this->em->getRepository($this->entity['class'])->findById(explode(',', $ids));
             }
@@ -404,9 +399,13 @@ class AdminController extends Controller
             $this->executeDynamicMethod('preBatch<EntityName>Entity', array($entities));
 
             foreach ($entities as $entity) {
+                if ($entities instanceof \Iterator) {
+                    $entity = $entity[0];
+                }
                 $easyadmin['item'] = $entity;
                 $this->request->attributes->set('easyadmin', $easyadmin);
                 $this->executeDynamicMethod($batchAction.'<EntityName>Action');
+                $this->em->detach($entity);
             }
            
         }
