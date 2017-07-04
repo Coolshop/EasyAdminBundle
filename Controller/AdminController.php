@@ -405,7 +405,6 @@ class AdminController extends Controller
                 $easyadmin['item'] = $entity;
                 $this->request->attributes->set('easyadmin', $easyadmin);
                 $this->executeDynamicMethod($batchAction.'<EntityName>Action');
-                $this->em->detach($entity);
             }
            
         }
